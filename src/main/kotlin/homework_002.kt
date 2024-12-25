@@ -1,12 +1,16 @@
 fun main() {
 
-    var person = Person("","","")
-    readCommand(person)
+    var nameAndPhone = mutableMapOf("" to "")
+    var nameAndEmail = mutableMapOf("" to "")
+
+    var person = Person(nameAndPhone, nameAndEmail)
+    readCommand(person, nameAndPhone, nameAndEmail)
 
 }
 
 
-data class Person(var name: String, var phone: String, var email: String)
+
+data class Person(var nameAndPhone: Map<String, String>, var nameAndEmail: Map<String, String>)
 
 sealed interface Command{
     fun doing()
@@ -18,46 +22,141 @@ sealed interface Command{
     }
 }
 
-fun readCommand(person: Person): Command{
+fun readCommand(person: Person, nameAndPhone: MutableMap<String, String>, nameAndEmail: MutableMap<String, String>): Command{
     println("""
                 Выберите действие:
                 1 - exit
                 2 - help
-                3 - add new abonent
-                4 - show
+                3 - add new abonent and phone
+                4 - add new abonent and email
+                5 - show
+                6 - showAll
+                7 - find
             """)
     var choise: String? = readlnOrNull()
     if(choise.equals("1")){
         EndClass().doing()
         return EndClass()
     }else if(choise.equals("2")){
-        Information(person).doing()
-        return Information(person)
+        Information(person, nameAndPhone, nameAndEmail).doing()
+        return Information(person, nameAndPhone, nameAndEmail)
     }else if(choise.equals("3")){
-        AddAbonent(person).doing()
-        return AddAbonent(person)
+        AddPhone(person, nameAndPhone, nameAndEmail).doing()
+        return AddPhone(person, nameAndPhone, nameAndEmail)
     }else if(choise.equals("4")){
-        Show(person).doing()
-        return Show(person)
+        AddEmail(person, nameAndPhone, nameAndEmail).doing()
+        return AddEmail(person, nameAndPhone, nameAndEmail)
+    }else if(choise.equals("5")){
+        Show(person, nameAndPhone, nameAndEmail).doing()
+        return Show(person, nameAndPhone, nameAndEmail)
+    }else if(choise.equals("6")){
+        ShowAll(person, nameAndPhone, nameAndEmail).doing()
+        return ShowAll(person, nameAndPhone, nameAndEmail)
+    }else if(choise.equals("7")){
+        findAbonent(person, nameAndPhone, nameAndEmail).doing()
+        return findAbonent(person, nameAndPhone, nameAndEmail)
     }else{
-        readCommand(person)
-        return readCommand(person)
+        readCommand(person, nameAndPhone, nameAndEmail)
+        return readCommand(person, nameAndPhone, nameAndEmail)
     }
 }
 
-class Show(var person: Person) : Command{
 
+
+class Show(var person: Person, var nameAndPhone: MutableMap<String, String>, var nameAndEmail: MutableMap<String, String>) : Command{
 
     override fun doing(){
-        if((person.name == "" && person.phone == "") || person.name == "" && person.email == ""){
-            println("Not initialized")
-        }else{
-            println("Крайний добавленный абонент:")
-            println(person)
+        var count: Int = 0
+        println("Введите имя искомого абонента: ")
+        var findName = readLine()
+        for(abonentPhone in nameAndPhone){
+            if(abonentPhone.key == ""){
+                println("Список абонентов с номером телефона пуст")
+                count = 1
+            }else{
+                if(findName == abonentPhone.key){
+                    println("-${abonentPhone.key}: ${abonentPhone.value}")
+                    count++
+                }
+            }
         }
-        readCommand(person)
+        if(count == 0){
+            println("У абонента ${findName} нет номера телефона")
+        }
+        count = 0
+        for(abonentEmail in nameAndEmail){
+            if(abonentEmail.key == ""){
+                println("Список абонентов с адресом электронной почты пуст")
+                count = 1
+            }else{
+                if(findName == abonentEmail.key){
+                    println("-${abonentEmail.key}: ${abonentEmail.value}")
+                    count++
+                }
+            }
+        }
+        if(count == 0){
+            println("У абонента ${findName} нет адреса электронной почты")
+        }
+        readCommand(person, nameAndPhone, nameAndEmail)
     }
 }
+
+class ShowAll(var person: Person, var nameAndPhone: MutableMap<String, String>, var nameAndEmail: MutableMap<String, String>) : Command{
+
+    override fun doing(){
+        for(abonentPhone in nameAndPhone){
+            if(abonentPhone.key == ""){
+                println("Список абонентов с номером телефона пуст")
+            }else{
+                println("-${abonentPhone.key}: ${abonentPhone.value}")
+            }
+        }
+        for(abonentEmail in nameAndEmail){
+            if(abonentEmail.key == ""){
+                println("Список абонентов с адресом электронной почты пуст")
+            }else{
+                println("-${abonentEmail.key}: ${abonentEmail.value}")
+            }
+        }
+        readCommand(person, nameAndPhone, nameAndEmail)
+    }
+}
+
+
+class findAbonent(var person: Person, var nameAndPhone: MutableMap<String, String>, var nameAndEmail: MutableMap<String, String>) : Command{
+
+    override fun doing(){
+        println("Введите номер телефона или адрес электронной почты для поиска абонента:")
+        var count: Int = 0
+        var findElement = readLine()
+        for(abonentPhone in nameAndPhone){
+            if(abonentPhone.key == ""){
+                println("Список абонентов с номером телефона пуст")
+            }else{
+                if(findElement == abonentPhone.value){
+                    println("-${findElement}: ${abonentPhone.key}")
+                    count++
+                }
+            }
+        }
+        for(abonentEmail in nameAndEmail){
+            if(abonentEmail.key == ""){
+                println("Список абонентов с адресом электронной почты пуст")
+            }else{
+                if(findElement == abonentEmail.value){
+                    println("-${findElement}: ${abonentEmail.key}")
+                    count++
+                }
+            }
+        }
+        if(count == 0){
+            println("Абонент не найден!")
+        }
+        readCommand(person, nameAndPhone, nameAndEmail)
+    }
+}
+
 
 class EndClass : Command{
     override fun doing(){
@@ -67,7 +166,7 @@ class EndClass : Command{
 }
 
 
-class Information(var person: Person) : Command{
+class Information(var person: Person, var nameAndPhone: MutableMap<String, String>, var nameAndEmail: MutableMap<String, String>) : Command{
     override fun doing() {
         println("""
                 Здравствуйте! Вы находитесь в телефонной книге.
@@ -82,17 +181,66 @@ class Information(var person: Person) : Command{
                 -При добавлении адреса электронной почты не забудьте
                 использовать символ @ ("собака") и символ . ("точка")
             """)
-        readCommand(person)
+        readCommand(person, nameAndPhone, nameAndEmail)
     }
 }
 
-class AddAbonent(var person: Person) : Command{
+class AddPhone (var person: Person, var nameAndPhone: MutableMap<String, String>, var nameAndEmail: MutableMap<String, String>) : Command{
 
     override fun doing() {
         println("""
                 Введите данные нового абонента в соответствии с шаблоном
                 add <Имя> phone <Номер телефона> 
-                или
+            """
+        )
+        var abonent: String? = readlnOrNull()
+        if (abonent != null) {
+            var arrayAbonent = abonent.split(" ")
+            if (arrayAbonent.size != 4) {
+                println(
+                    """
+                    ПРИ ДОБАВЛЕНИИ НОВОГО АБОНЕНТА ВОЗНИКЛА ОШИБКА!!!
+                    ПОПРОБУЙТЕ СНОВА
+                """
+                )
+                readCommand(person, nameAndPhone, nameAndEmail)
+            }
+
+            var name: String = arrayAbonent[1]
+            var secondAbonentParametr: String = arrayAbonent[3]
+
+
+            var regexName = "^[a-z]+$|^[а-я]+$".toRegex(RegexOption.IGNORE_CASE)
+            var regexPhone = "^[+][0-9]+$|^[0-9]+$".toRegex()
+
+
+            when{
+                isValid(regexName,name) && isValid(regexPhone,secondAbonentParametr) -> {
+                    println("Абонент $name с номером телефона $secondAbonentParametr добавлен")
+                    nameAndPhone.remove("")
+                    nameAndPhone.put(name, secondAbonentParametr)
+                    readCommand(person, nameAndPhone, nameAndEmail)
+                }
+                else -> {
+                    Information(person, nameAndPhone, nameAndEmail).doing()
+                    readCommand(person, nameAndPhone, nameAndEmail)
+                }
+
+            }
+
+        } else {
+            Information(person, nameAndPhone, nameAndEmail).doing()
+            readCommand(person, nameAndPhone, nameAndEmail)
+        }
+    }
+}
+
+
+class AddEmail (var person: Person, var nameAndPhone: MutableMap<String, String>, var nameAndEmail: MutableMap<String, String>) : Command{
+
+    override fun doing() {
+        println("""
+                Введите данные нового абонента в соответствии с шаблоном
                 add <Имя> email <Адрес электронной почты>:
             """
         )
@@ -106,7 +254,7 @@ class AddAbonent(var person: Person) : Command{
                     ПОПРОБУЙТЕ СНОВА
                 """
                 )
-                readCommand(person)
+                readCommand(person, nameAndPhone, nameAndEmail)
             }
 
             var name: String = arrayAbonent[1]
@@ -114,36 +262,27 @@ class AddAbonent(var person: Person) : Command{
 
 
             var regexName = "^[a-z]+$|^[а-я]+$".toRegex(RegexOption.IGNORE_CASE)
-            var regexPhone = "^[+][0-9]+$|^[0-9]+$".toRegex()
             var regexemail = "\\b[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}\\b".toRegex(RegexOption.IGNORE_CASE)
 
 
 
             when{
-                isValid(regexName,name) && isValid(regexPhone,secondAbonentParametr) -> {
-                    println("Абонент $name с номером телефона $secondAbonentParametr добавлен")
-                    person.name = name
-                    person.phone = secondAbonentParametr
-                    person.email = ""
-                    readCommand(person)
-                }
                 isValid(regexName,name) && isValid(regexemail,secondAbonentParametr) -> {
                     println("Абонент $name с адресом электронной почты $secondAbonentParametr добавлен")
-                    person.name = name
-                    person.email = secondAbonentParametr
-                    person.phone = ""
-                    readCommand(person)
+                    nameAndEmail.remove(nameAndEmail.remove(""))
+                    nameAndEmail.put(name, secondAbonentParametr)
+                    readCommand(person, nameAndPhone, nameAndEmail)
                 }
                 else -> {
-                    Information(person).doing()
-                    readCommand(person)
+                    Information(person, nameAndPhone, nameAndEmail).doing()
+                    readCommand(person, nameAndPhone, nameAndEmail)
                 }
 
             }
 
         } else {
-            Information(person).doing()
-            readCommand(person)
+            Information(person, nameAndPhone, nameAndEmail).doing()
+            readCommand(person, nameAndPhone, nameAndEmail)
         }
     }
 }
